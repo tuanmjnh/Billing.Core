@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+//using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,7 +43,7 @@ namespace Billing.Core {
             //services.AddDbContext<TMShopsCore.Models.TMShopsContext> (options => options.UseSqlServer (Configuration.GetConnectionString ("MainConnection"), b => b.UseRowNumberForPaging ()));
             services.AddDistributedMemoryCache (); // Adds a default in-memory implementation of IDistributedCache
             services.AddSession ();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc ().SetCompatibilityVersion (CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,9 +51,13 @@ namespace Billing.Core {
             //Add service for accessing current HttpContext AND ActionContext
             TM.Core.Helper.TMAppContext.Services = app.ApplicationServices;
             //CultureInfo Defalut
-            TM.Core.Format.Formating.CultureInfo();
+            TM.Core.Format.Formating.CultureInfo ();
             if (env.IsDevelopment ()) {
                 app.UseDeveloperExceptionPage ();
+                // app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions
+                // {
+                //     HotModuleReplacement = true
+                // });
             } else {
                 app.UseExceptionHandler ("/Home/Error");
                 app.UseHsts ();
@@ -60,7 +65,7 @@ namespace Billing.Core {
 
             //app.UseHttpsRedirection();
             app.UseStaticFiles ();
-            app.UseSession();
+            app.UseSession ();
             app.UseCookiePolicy ();
 
             app.UseMvc (routes => {

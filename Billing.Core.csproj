@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,9 @@
     <Reference Include="Dapper.Contrib">
       <HintPath>Extensions\Dapper.Contrib.dll</HintPath>
     </Reference> -->
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\dist\" />
   </ItemGroup>
 
 </Project>

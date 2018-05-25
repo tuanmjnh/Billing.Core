@@ -6,15 +6,21 @@ using System.Threading.Tasks;
 using Dapper;
 using Dapper.Contrib;
 using Microsoft.AspNetCore.Mvc;
+
 namespace Billing.Core.Controllers {
     public class BaseController : Controller {
+
+        public static TM.Core.Connection.Oracle _Con;
+        public void getConnection(string ConnectionString = "ORA_VNPTBK") {
+            _Con = new TM.Core.Connection.Oracle(ConnectionString);
+        }
         public ActionResult DownloadFiles(string dir, string DestName = null) {
             try {
                 if (!string.IsNullOrEmpty(DestName)) {
                     dir = dir.TrimEnd('/', '\\');
-                    return TM.Core.Helper.IO.FileContentResult(System.Net.WebUtility.UrlDecode(dir), DestName);
+                    return TM.Core.IO.FileContentResult(System.Net.WebUtility.UrlDecode(dir), DestName);
                 } else
-                    return TM.Core.Helper.IO.FileContentResult(System.Net.WebUtility.UrlDecode(dir));
+                    return TM.Core.IO.FileContentResult(System.Net.WebUtility.UrlDecode(dir));
             } catch (Exception) {
                 return null;
             }
@@ -61,10 +67,8 @@ namespace Billing.Core.Controllers {
         public static List<Billing.Core.Models.SETTINGS> Settings(string module_key) {
             try {
                 //return AllSetting.Where(s => s.module_key.Equals("module_key")).ToList();
-                var Oracle = new TM.Core.Connection.Oracle("VNPTBK");
-                var rs = Oracle.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key",
+                var rs = _Con.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key",
                     new { module_key = module_key }).ToList();
-                Oracle.Close();
                 return rs;
 
             } catch (Exception) { return null; }
@@ -72,20 +76,16 @@ namespace Billing.Core.Controllers {
         public static List<Billing.Core.Models.SETTINGS> Settings(string module_key, string sub_key) {
             try {
                 //return AllSetting.Where(s => s.module_key.Equals(module_key) && s.sub_key.Equals(sub_key)).ToList();
-                var Oracle = new TM.Core.Connection.Oracle("VNPTBK");
-                var rs = Oracle.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key AND sub_key=@sub_key",
+                var rs = _Con.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key AND sub_key=@sub_key",
                     new { module_key = module_key, sub_key = sub_key }).ToList();
-                Oracle.Close();
                 return rs;
             } catch (Exception) { return null; }
         }
         public static Billing.Core.Models.SETTINGS Setting(string module_key, string sub_key, string value) {
             try {
                 //return AllSetting.Where(s => s.module_key.Equals(module_key) && s.sub_key.Equals(sub_key) && s.value.Equals(value)).FirstOrDefault();
-                var Oracle = new TM.Core.Connection.Oracle("VNPTBK");
-                var rs = Oracle.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key AND sub_key=@sub_key AND value=@value",
+                var rs = _Con.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings WHERE module_key=@module_key AND sub_key=@sub_key AND value=@value",
                     new { module_key = module_key, sub_key = sub_key, value = value }).First();
-                Oracle.Close();
                 return rs;
             } catch (Exception) { return null; }
         }
@@ -101,15 +101,13 @@ namespace Billing.Core.Controllers {
         }
         public static bool setSetting() {
             try {
-                if (AllSetting == null)LoadSetting();
+                if (AllSetting == null) LoadSetting();
                 return true;
             } catch (Exception) { return false; }
         }
         public static void LoadSetting() {
             try {
-                var Oracle = new TM.Core.Connection.Oracle("VNPTBK");
-                var rs = Oracle.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings").ToList();
-                Oracle.Close();
+                var rs = _Con.Connection.Query<Billing.Core.Models.SETTINGS>("SELECT * FROM settings").ToList();
             } catch (Exception) { }
             //using (var dbs = new Models.PortalContext())
             //{
@@ -131,17 +129,17 @@ namespace Billing.Core.Controllers {
         //}
         public static string getMonthYear(string str) {
             try {
-                return str[0].ToString()+ str[1].ToString()+ "/20" + str[2].ToString()+ str[3].ToString();
+                return str[0].ToString() + str[1].ToString() + "/20" + str[2].ToString() + str[3].ToString();
             } catch (Exception) { return str; }
         }
         public static string getMonthDayYear(string str) {
             try {
-                return str[0].ToString()+ str[1].ToString()+ "/1/20" + str[2].ToString()+ str[3].ToString();
+                return str[0].ToString() + str[1].ToString() + "/1/20" + str[2].ToString() + str[3].ToString();
             } catch (Exception) { return str; }
         }
         public static string getYearMonth(string str) {
             try {
-                return str[4].ToString()+ str[5].ToString()+ "/" + str[0].ToString()+ str[1].ToString()+ str[2].ToString()+ str[3].ToString();
+                return str[4].ToString() + str[5].ToString() + "/" + str[0].ToString() + str[1].ToString() + str[2].ToString() + str[3].ToString();
             } catch (Exception) { return str; }
         }
         public static bool ReExtensionToLower(string DataSource) {
@@ -150,46 +148,51 @@ namespace Billing.Core.Controllers {
             }
         }
 
-        [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-        public class ValidateJsonAntiForgeryTokenAttribute : FilterAttribute, IAuthorizationFilter {
-            public void OnAuthorization(AuthorizationContext filterContext) {
-                if (filterContext == null)
-                    throw new ArgumentNullException("filterContext");
-                var httpContext = filterContext.HttpContext;
-                var cookie = httpContext.Request.Cookies[System.Web.Helpers.AntiForgeryConfig.CookieName];
-                System.Web.Helpers.AntiForgery.Validate(cookie != null ? cookie.Value : null, httpContext.Request.Headers["__RequestVerificationToken"]);
-            }
-        }
+        // [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+        // public class ValidateJsonAntiForgeryTokenAttribute : FilterAttribute, IAuthorizationFilter {
+        //     public void OnAuthorization(AuthorizationContext filterContext) {
+        //         if (filterContext == null)
+        //             throw new ArgumentNullException("filterContext");
+        //         var httpContext = filterContext.HttpContext;
+        //         var cookie = httpContext.Request.Cookies[System.Web.Helpers.AntiForgeryConfig.CookieName];
+        //         System.Web.Helpers.AntiForgery.Validate(cookie != null ? cookie.Value : null, httpContext.Request.Headers["__RequestVerificationToken"]);
+        //     }
+        // }
         public int UploadBase(string DataSource, string strResult = null, List<string> fileUpload = null, string Extension = ".dbf") {
             try {
                 int uploadedCount = 0;
-                if (Request.Files.Count > 0) {
+                var files = Request.Form.Files;
+                if (files.Count > 0) {
                     FileManagerController.InsertDirectory(DataSource, false);
-                    if (fileUpload == null)fileUpload = new List<string>();
+                    if (fileUpload == null) fileUpload = new List<string>();
                     var fileSavePath = new List<string>();
                     //Delete old File
                     //TM.IO.Delete(obj.DataSource, TM.IO.Files(obj.DataSource));
 
-                    for (int i = 0; i < Request.Files.Count; i++) {
-                        var file = Request.Files[i];
+                    for (int i = 0; i < files.Count; i++) {
+                        var file = files[i];
                         if (!file.FileName.IsExtension(Extension))
-                            return (int)Common.Objects.ResultCode._extension;
+                            return (int) Common.Objects.ResultCode._extension;
 
-                        if (file.ContentLength > 0) {
+                        if (file.Length > 0) {
                             if (fileUpload.Count < 1)
                                 fileUpload.Add(file.FileName.ToLower()); //System.IO.Path.GetFileName(
                             fileSavePath.Add(DataSource + fileUpload[i]);
-                            file.SaveAs(fileSavePath[i]);
+
+                            using(System.IO.FileStream fs = System.IO.File.Create(fileSavePath[i])) {
+                                files[i].CopyTo(fs);
+                                fs.Flush();
+                            }
                             uploadedCount++;
                             FileManagerController.InsertFile(DataSource + fileUpload[i], false);
                         }
                     }
                     var rs = "Tải lên thành công </br>";
-                    foreach (var item in fileUpload)rs += item + "<br/>";
+                    foreach (var item in fileUpload) rs += item + "<br/>";
                     strResult = rs;
-                    return (int)Common.Objects.ResultCode._success;
+                    return (int) Common.Objects.ResultCode._success;
                 } else
-                    return (int)Common.Objects.ResultCode._length;
+                    return (int) Common.Objects.ResultCode._length;
 
             } catch (Exception) { throw; }
         }
@@ -239,21 +242,21 @@ namespace Billing.Core.Controllers {
 
                 switch (ma_cbt) {
                     case "TBK":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBK0", ma_dvi): ma_tuyen.Replace("TBK", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBK0", ma_dvi) : ma_tuyen.Replace("TBK", ma_dvi);
                     case "TBB":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBB0", ma_dvi): ma_tuyen.Replace("TBB", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBB0", ma_dvi) : ma_tuyen.Replace("TBB", ma_dvi);
                     case "TBT":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBT0", ma_dvi): ma_tuyen.Replace("TBT", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TBT0", ma_dvi) : ma_tuyen.Replace("TBT", ma_dvi);
                     case "TCD":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TCD0", ma_dvi): ma_tuyen.Replace("TCD", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TCD0", ma_dvi) : ma_tuyen.Replace("TCD", ma_dvi);
                     case "TCM":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TCM0", ma_dvi): ma_tuyen.Replace("TCM", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TCM0", ma_dvi) : ma_tuyen.Replace("TCM", ma_dvi);
                     case "TNR":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TNR0", ma_dvi): ma_tuyen.Replace("TNR", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TNR0", ma_dvi) : ma_tuyen.Replace("TNR", ma_dvi);
                     case "TNS":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TNS0", ma_dvi): ma_tuyen.Replace("TNS", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TNS0", ma_dvi) : ma_tuyen.Replace("TNS", ma_dvi);
                     case "TPN":
-                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TPN0", ma_dvi): ma_tuyen.Replace("TPN", ma_dvi);
+                        return ma_tuyen.Length <= 6 ? ma_tuyen.Replace("TPN0", ma_dvi) : ma_tuyen.Replace("TPN", ma_dvi);
                     default:
                         return $"{ma_dvi}01";
                 }

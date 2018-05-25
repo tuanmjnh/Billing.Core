@@ -6,8 +6,7 @@
 @*@System.Text.RegularExpressions.Regex.Replace("hdnet0916ggGGDW.dbf", @"[a-zA-Z]", "")*@
 @*@using (Html.BeginForm(new { enctype = "multipart/form-data" }))
     {*@
-@{ var time = "201707";}
-<form id="MerginBillForm" method="post" action="@TM.Url.BaseUrl/MerginBill/UploadFiles" enctype="multipart/form-data">
+<form id="MerginBillForm" method="post" action="/MerginBill/UploadFiles" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
     <div class="form-horizontal">
         <hr />

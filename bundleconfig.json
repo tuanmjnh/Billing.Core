@@ -3,7 +3,7 @@
     "outputFileName": "wwwroot/css/site.min.css",
     "inputFiles": [
       "node_modules/bootstrap/dist/css/bootstrap.min.css",
-      "node_modules/font-awesome/css/font-awesome.min.css",
+      "wwwroot/lib/font-awesome/css/font-awesome.min.css",
       "wwwroot/css/site.css"
     ]
   },
@@ -17,8 +17,9 @@
       "node_modules/moment/min/moment.min.js",
       "node_modules/popper.js/dist/umd/popper.min.js",
       "node_modules/bootstrap/dist/js/bootstrap.min.js",
+      "wwwroot/js/bootstrap-datetimepicker.min.js",
       "wwwroot/lib/bootstrap-table/bootstrap-table.js",
-      "node_modules/tinymce/tinymce.min.js",
+      "wwwroot/lib/tinymce/tinymce.min.js",
       "wwwroot/js/TMLibrary.js",
       "wwwroot/js/TMlanguage.js",
       "wwwroot/js/TMForm.js",

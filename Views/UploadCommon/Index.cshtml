@@ -103,7 +103,7 @@
             <div class="card mb-3">
                 <h5 class="card-header">Thực hiện Upload</h5>
                 <div class="card-body">
-                    @foreach (var item in (List<Billing.Models.DICHVU_VT_BKN>)ViewBag.dvvt)
+                    @foreach (var item in (List<Billing.Core.Models.DICHVU_VT_BKN>)ViewBag.dvvt)
                     {
                         <a href="javascript:;" class="btn btn-secondary mb5 w49percent btnAction" data-url="@Url.Action("GeneralUpload")" data-id="@item.DICHVUVT_ID">@item.DICHVUVT_ID. @item.TEN_DVVT</a>
                     }

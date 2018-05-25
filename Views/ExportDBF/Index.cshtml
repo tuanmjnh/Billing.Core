@@ -366,7 +366,7 @@
 
                     var html = '<table class="table table-hover table-bordered">' +
                         '<thead class="thead-light"><tr><th class="col">Tên kết xuất</th><th class="col-md-1">#</th><th class="col-md-1">#</th>';
-                    if (d.roles == '@Authentication.Roles.superadmin' || d.roles == '@Authentication.Roles.admin')
+                    if (d.roles == '@Authentication.Core.Roles.superadmin' || d.roles == '@Authentication.Core.Roles.admin')
                         html += '<th class="col-md-1">#</th>';
                     html += '</tr></thead><tbody>';
                     for (var i = 0; i < d.data.length; i++) {
@@ -374,7 +374,7 @@
                             <td>' + d.data[i].TABLE_NAME + '</td>\
                             <td><span class="btn btn-success pointer btnExportExportCustom" data-toggle="tooltip" data-placement="right" title="Xuất file DBF"><i class="fa fa-cloud-download"></i></span></td>\
                             <td><span class="btn btn-info pointer btnEditExportCustom" data-toggle="tooltip" data-placement="right" title="Cấu hình"><i class="fa fa-cog fa-spin" aria-hidden="true"></i></span></td>';
-                        if (d.roles == '@Authentication.Roles.superadmin' || d.roles == '@Authentication.Roles.admin')
+                        if (d.roles == '@Authentication.Core.Roles.superadmin' || d.roles == '@Authentication.Core.Roles.admin')
                             html += '<td><span class="btn btn-danger pointer btnRemoveExportCustom" data-toggle="tooltip" data-placement="right" title="Xóa"><i class="fa fa-times" aria-hidden="true"></i></span></td></tr>';
                     }
                     html += '</tbody></table>';

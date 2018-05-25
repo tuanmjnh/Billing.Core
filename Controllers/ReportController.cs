@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using System.Web.Mvc;
-using TM.Message;
+using Microsoft.AspNetCore.Mvc;
 using Dapper;
 using Dapper.Contrib.Extensions;
-using TM.Helper;
 
-namespace Billing.Controllers
+namespace Billing.Core.Controllers
 {
-    [Filters.Auth(Role = Authentication.Roles.superadmin + "," + Authentication.Roles.admin + "," + Authentication.Roles.managerBill)]
+    [MiddlewareFilters.Auth(Role = Authentication.Core.Roles.superadmin + "," + Authentication.Core.Roles.admin + "," + Authentication.Core.Roles.managerBill)]
     public class ReportController : BaseController
     {
 
@@ -18,32 +16,29 @@ namespace Billing.Controllers
         {
             try
             {
-                var SQLServer = new TM.Connection.SQLServer();
                 FileManagerController.InsertDirectory(Common.Directories.HDData);
-                ViewBag.directory = TM.IO.FileDirectory.DirectoriesToList(Common.Directories.HDData).OrderByDescending(d => d).ToList();
+                ViewBag.directory = TM.Core.IO.DirectoriesToList(Common.Directories.HDData).OrderByDescending(d => d).ToList();
             }
-            catch (Exception ex) { this.danger(ex.Message); }
+            catch (Exception) { }
             return View();
         }
         [HttpGet]
         public JsonResult GetReportCustom()
         {
-            var SQLServer = new TM.Connection.SQLServer();
             var appkey = "report_doanh_thu";
             var index = 0;
             string msg = "Lấy báo cáo thành công!";
             try
             {
                 string qry = $"SELECT * FROM GROUPS WHERE APPKEY='{appkey}' AND FLAG=1 ORDER BY ORDERS";
-                var data = SQLServer.Connection.Query<Models.GROUPS>(qry);
-                return Json(new { data = data, success = msg }, JsonRequestBehavior.AllowGet);
+                var data = _Con.Connection.Query<Models.GROUPS>(qry);
+                return Json(new { data = data, success = msg });
             }
-            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }, JsonRequestBehavior.AllowGet); }
+            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }); }
         }
         [HttpPost, ValidateAntiForgeryToken]
         public JsonResult GetReportDetailCustom(Common.DefaultObj obj)
         {
-            var SQLServer = new TM.Connection.SQLServer();
             var index = 0;
             obj.DataSource = Common.Directories.HDData;
             obj = getDefaultObj(obj);
@@ -51,7 +46,7 @@ namespace Billing.Controllers
             try
             {
                 string qry = $"SELECT * FROM ITEMS WHERE GROUPID={obj.data_id} AND FLAG=1 ORDER BY ORDERS";
-                var item = SQLServer.Connection.Query<Models.ITEMS>(qry);
+                var item = _Con.Connection.Query<Models.ITEMS>(qry);
                 var data = new ReportDetailCustom();
                 foreach (var i in item)
                 {
@@ -69,36 +64,35 @@ namespace Billing.Controllers
                     {
                         if (i.QUANTITY == 0)
                         {
-                            var FoxPro = new TM.Connection.OleDBF(obj.DataSource);
-                            data.cd = FoxPro.Connection.Query(i.DESCRIPTION);
-                            data.cc = FixContent(i.CONTENTS);
-                            FoxPro.Close();
+                            // var FoxPro = new TM.Core.Connection.OleDBF(obj.DataSource);
+                            // data.cd = FoxPro.Connection.Query(i.DESCRIPTION);
+                            // data.cc = FixContent(i.CONTENTS);
+                            // FoxPro.Close();
                         }
                         else if (i.QUANTITY == 1)
                         {
-                            data.cd = SQLServer.Connection.Query(i.DESCRIPTION);
+                            data.cd = _Con.Connection.Query(i.DESCRIPTION);
                             data.cc = FixContent(i.CONTENTS);
                         }
 
                     }
                 }
-                return Json(new { data = data, datetime = obj.datetime, success = msg }, JsonRequestBehavior.AllowGet);
+                return Json(new { data = data, datetime = obj.datetime, success = msg });
             }
-            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }, JsonRequestBehavior.AllowGet); }
+            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }); }
         }
         [HttpGet]
         public JsonResult GetQuanHuyen()
         {
-            var SQLServer = new TM.Connection.SQLServer();
             var index = 0;
             string msg = "Lấy dữ liệu thành công!";
             try
             {
                 string qry = $"SELECT * FROM QUAN_HUYEN_BKN ORDER BY MA_QUANHUYEN";
-                var data = SQLServer.Connection.Query<Models.QUAN_HUYEN_BKN>(qry);
-                return Json(new { data = data, success = msg }, JsonRequestBehavior.AllowGet);
+                var data = _Con.Connection.Query<Models.QUAN_HUYEN_BKN>(qry);
+                return Json(new { data = data, success = msg });
             }
-            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }, JsonRequestBehavior.AllowGet); }
+            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }); }
         }
         public string FixContent(string val)
         {
@@ -130,7 +124,7 @@ namespace Billing.Controllers
             obj.time = obj.time;
             obj.ckhMerginMonth = obj.ckhMerginMonth;
             obj.file = "BKN_th";
-            obj.DataSource = Server.MapPath("~/" + obj.DataSource) + obj.time + "\\";
+            obj.DataSource = TM.Core.IO.MapPath("~/" + obj.DataSource) + obj.time + "\\";
             return obj;
         }
         public class ReportDetailCustom

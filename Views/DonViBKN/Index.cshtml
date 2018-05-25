@@ -2,11 +2,6 @@
     ViewBag.Title = "Quản lý Đơn vị BKN";
     ViewBag.ContentTitle = "Danh sách Đơn vị BKN";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var disabled = "";
-    if (Authentication.Auth.AuthUser.roles == Authentication.Roles.staff || Authentication.Auth.AuthUser.roles == Authentication.Roles.leader)
-    {
-        disabled = "disabled";
-    }
 }
 <div class="form-inline pull-right mb10 pl5">
     <div class="pull-right">

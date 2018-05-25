@@ -1,23 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Net;
-using System.Web;
-using System.Web.Mvc;
-using TM.Helper;
 using Dapper;
 using Dapper.Contrib.Extensions;
-using ExcelDataReader;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Billing.Controllers
-{
-    [Filters.Auth(Role = Authentication.Roles.superadmin + "," + Authentication.Roles.admin + "," + Authentication.Roles.managerBill)]
-    public class BGCuocController : BaseController
-    {
-        TM.Connection.SQLServer SQLServer;
+namespace Billing.Core.Controllers {
+    [MiddlewareFilters.Auth(Role = Authentication.Core.Roles.superadmin + "," + Authentication.Core.Roles.admin + "," + Authentication.Core.Roles.managerBill)]
+    public class BGCuocController : BaseController {
         //public ActionResult Index(int? flag, string order, string currentFilter, string searchString, int? page, string datetime, int? datetimeType, string export)
         //{
         //    try
@@ -122,36 +113,31 @@ namespace Billing.Controllers
         //    }
         //    return View();
         //}
-        public ActionResult Index()
-        {
+        public ActionResult Index() {
             return View();
         }
-        public ActionResult Insert()
-        {
+        public ActionResult Insert() {
             return PartialView("PartialCreate");
         }
-        public ActionResult Update()
-        {
+        public ActionResult Update() {
             return PartialView("PartialEdit");
         }
-        public ActionResult ImportTextData()
-        {
+        public ActionResult ImportTextData() {
             return PartialView("PartialImportTextData");
         }
+
         [HttpGet]
-        public JsonResult Select(objBST obj)//string sort, string order, string search, int offset = 0, int limit = 10, int flag = 1
+        public JsonResult Select(objBST obj) //string sort, string order, string search, int offset = 0, int limit = 10, int flag = 1
         {
             var index = 0;
             var qry = "";
             var cdt = "";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
+            try {
                 //
                 qry = $"SELECT * FROM BGCUOC WHERE FLAG={obj.flag}";
 
                 //Get data for Search
-                if (!String.IsNullOrEmpty(obj.search) && obj.search.isNumber())
+                if (!String.IsNullOrEmpty(obj.search) && TM.Core.Regex.RegEx.isNumber(obj.search))
                     cdt += $"(GOICUOCID={obj.search}) AND ";
                 else if (!string.IsNullOrEmpty(obj.search))
                     cdt += $"(TENGOI LIKE '%{obj.search}%' OR PROFILE LIKE '%{obj.search}%' OR PROFILEIP LIKE '%,{obj.search},%') AND ";
@@ -160,25 +146,24 @@ namespace Billing.Controllers
                     qry += $" AND {cdt.Substring(0, cdt.Length - 5)}";
 
                 //export
-                if (obj.export == 1)
-                {
+                if (obj.export == 1) {
                     //var startDate = DateTime.ParseExact($"{obj.startDate}", "dd/MM/yyyy HH:mm", provider);
                     //var endDate = DateTime.ParseExact($"{obj.endDate}", "dd/MM/yyyy HH:mm", provider);
                     //qry += $" AND tb.FLAG=2 AND tb.UPDATEDAT>=CAST('{startDate.ToString("yyyy-MM-dd")}' as datetime) AND tb.UPDATEDAT<=CAST('{endDate.ToString("yyyy-MM-dd")}' as datetime) ORDER BY tb.MA_DVI,tb.UPDATEDAT";
-                    //var export = SQLServer.Connection.Query<Portal.Areas.ND49.Models.ND49Export>(qry);
+                    //var export = _Con.Connection.Query<Portal.Areas.ND49.Models.ND49Export>(qry);
                     //qry = "SELECT * FROM users";
-                    //var user = SQLServer.Connection.Query<Authentication.user>(qry);
+                    //var user = _Con.Connection.Query<Authentication.user>(qry);
                     //foreach (var i in export)
                     //{
                     //    var tmp = user.FirstOrDefault(d => d.username == i.NVQL);
                     //    i.TEN_NVQL = tmp != null ? tmp.full_name : null;
                     //}
-                    //var rsJson = Json(new { data = export, SHA = Guid.NewGuid() }, JsonRequestBehavior.AllowGet);
+                    //var rsJson = Json(new { data = export, SHA = Guid.NewGuid() });
                     //rsJson.MaxJsonLength = int.MaxValue;
                     //return rsJson;
                 }
                 //
-                var data = SQLServer.Connection.Query<Models.BGCUOC>(qry);
+                var data = _Con.Connection.Query<Models.BGCUOC>(qry);
 
                 ////Get data for Search
                 //if (!string.IsNullOrEmpty(obj.search))
@@ -191,12 +176,11 @@ namespace Billing.Controllers
                 //    d.DIACHI_TT.Contains(obj.search));
                 //
                 if (data.ToList().Count < 1)
-                    return Json(new { total = 0, rows = data }, JsonRequestBehavior.AllowGet);
+                    return Json(new { total = 0, rows = data });
                 //Get total item
                 var total = data.Count();
                 //Sort And Orders
-                if (!string.IsNullOrEmpty(obj.sort))
-                {
+                if (!string.IsNullOrEmpty(obj.sort)) {
                     if (obj.sort.ToUpper() == "TENGOI" && obj.order.ToLower() == "asc")
                         data = data.OrderBy(m => m.TENGOI);
                     else if (obj.sort.ToUpper() == "TENGOI" && obj.order.ToLower() == "desc")
@@ -207,62 +191,49 @@ namespace Billing.Controllers
                         data = data.OrderByDescending(m => m.PROFILE);
                     else
                         data = data.OrderBy(m => m.NGAY_BD).ThenBy(m => m.TENGOI);
-                }
-                else
+                } else
                     data = data.OrderBy(m => m.NGAY_BD).ThenBy(m => m.TENGOI);
                 //Page Site
                 var rs = data.Skip(obj.offset).Take(obj.limit).ToList();
-                var ReturnJson = Json(new { total = total, rows = rs }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { total = total, rows = rs });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
-            //return Json(new { success = "Cập nhật thành công!" }, JsonRequestBehavior.AllowGet);
+            } catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }); }
+            //return Json(new { success = "Cập nhật thành công!" });
         }
+
         [HttpGet]
-        public JsonResult Get(long id)
-        {
+        public JsonResult Get(long id) {
             var index = 0;
             var qry = "";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
+            try {
                 qry = $"SELECT * FROM BGCUOC WHERE BGCUOCID={id}";
-                var data = SQLServer.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
-                var ReturnJson = Json(new { data = data, success = "Lấy dữ liệu thành công!" }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var data = _Con.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
+                var ReturnJson = Json(new { data = data, success = "Lấy dữ liệu thành công!" });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+            } catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }); }
         }
+
         [HttpPost, ValidateAntiForgeryToken]
-        public JsonResult InsertUpdate(Models.BGCUOC obj, long? id)
-        {
+        public JsonResult InsertUpdate(Models.BGCUOC obj, long? id) {
             //var provider = System.Globalization.CultureInfo.InvariantCulture;
             var index = 0;
             var qry = "";
             var msg = "Cập nhật thông tin thành công!";
             var profile_ip = "profile_ip";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
-                //
+            try {
                 qry = $"SELECT i.*,g.TITLE AS GROUPTITLE FROM ITEMS i,GROUPS g WHERE i.GROUPID=g.GROUPID AND i.APPKEY='{profile_ip}' AND g.APPKEY='{profile_ip}' AND i.FLAG=1 AND g.FLAG=1 ORDER BY i.TITLE";
-                var ProfileIPList = SQLServer.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
+                var ProfileIPList = _Con.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
                 //
-                if (id == null)
-                {
-                    obj.CREATEDBY = Authentication.Auth.AuthUser.username;
+                if (id == null) {
+                    obj.CREATEDBY = Authentication.Core.Auth.AuthUser.username;
                     obj.CREATEDAT = DateTime.Now;
-                    SQLServer.Connection.Insert(obj);
+                    _Con.Connection.Insert(obj);
                     msg = "Tạo mới thông tin thành công!";
-                }
-                else
-                {
+                } else {
                     qry = $"SELECT * FROM BGCUOC WHERE BGCUOCID={id}";
-                    var data = SQLServer.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
+                    var data = _Con.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
                     data.TENGOI = obj.TENGOI;
                     data.PROFILE = obj.PROFILE;
                     data.PROFILEIP = getProfileIP(ProfileIPList.TITLE, data.PROFILE);
@@ -277,84 +248,69 @@ namespace Billing.Controllers
                     data.NGAY_BD = obj.NGAY_BD;
                     data.NGAY_KT = obj.NGAY_KT;
                     data.EXTRA_TYPE = obj.EXTRA_TYPE;
-                    data.UPDATEDBY = Authentication.Auth.AuthUser.username;
+                    data.UPDATEDBY = Authentication.Core.Auth.AuthUser.username;
                     data.UPDATEDAT = DateTime.Now;
                     data.FLAG = obj.FLAG;
-                    SQLServer.Connection.Update(data);
+                    _Con.Connection.Update(data);
                 }
-                var ReturnJson = Json(new { success = msg }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { success = msg });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+            } catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }); }
         }
+
         [HttpPost, ValidateAntiForgeryToken]
-        public JsonResult Delete(string id)
-        {
+        public JsonResult Delete(string id) {
             var index = 0;
             var qry = "";
             var msg = "Xóa bản ghi thành công!";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
+            try {
                 var _id = id.Trim(',');
-
                 qry = $"SELECT * FROM BGCUOC WHERE BGCUOCID IN({_id})";
-                var data = SQLServer.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
+                var data = _Con.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
 
                 if (data == null) return Json(new { danger = "Không tìm thấy dữ liệu!" });
-                if (data.FLAG == 0)
-                {
+                if (data.FLAG == 0) {
                     qry = $"UPDATE BGCUOC SET FLAG=1 WHERE BGCUOCID IN({_id})";
                     msg = "Khôi phục bản ghi thành công!";
-                }
-                else
-                    qry = $"UPDATE BGCUOC SET FLAG=0,DELETEDBY='{Authentication.Auth.AuthUser.username}',DELETEDAT=GETDATE() WHERE BGCUOCID IN({_id})";
-                SQLServer.Connection.Query(qry);
+                } else
+                    qry = $"UPDATE BGCUOC SET FLAG=0,DELETEDBY='{Authentication.Core.Auth.AuthUser.username}',DELETEDAT=GETDATE() WHERE BGCUOCID IN({_id})";
+                _Con.Connection.Query(qry);
 
-                var ReturnJson = Json(new { success = msg }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { success = msg });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+            } catch (Exception) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }); } finally { _Con.Close(); }
         }
         //Xử lý nhập Text Data
         [HttpPost, ValidateAntiForgeryToken]
-        public JsonResult ImportTextData(string txtDataVal, int actionType)
-        {
-            var SQLServer = new TM.Connection.SQLServer();
+        public JsonResult ImportTextData(string txtDataVal, int actionType) {
             long index = 0;
             var provider = System.Globalization.CultureInfo.InvariantCulture;
             var msg = "Cập nhật thành công";
             var profile_ip = "profile_ip";
-            try
-            {
+            try {
                 //
                 if (string.IsNullOrEmpty(txtDataVal))
-                    return Json(new { danger = "Vui lòng nhập giá trị!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { danger = "Vui lòng nhập giá trị!" });
                 //
                 //var qry = $"SELECT i.*,g.TITLE AS GROUPTITLE FROM ITEMS i,GROUPS g WHERE i.GROUPID=g.GROUPID AND i.APPKEY='{profile_ip}' AND g.APPKEY='{profile_ip}' AND i.FLAG=1 AND g.FLAG=1 ORDER BY i.TITLE";
                 var qry = $"SELECT * FROM GROUPS WHERE APPKEY='{profile_ip}' AND FLAG=1 ORDER BY TITLE";
-                var ProfileIPList = SQLServer.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
+                var ProfileIPList = _Con.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
                 var dataRow = txtDataVal.Split('\n');
                 //Remove old
-                if (actionType == 2)
-                {
+                if (actionType == 2) {
                     qry = $"DELETE BGCUOC";
-                    SQLServer.Connection.Query(qry);
+                    _Con.Connection.Query(qry);
                 }
                 index = 0;
                 //
                 var dataList = new List<Models.BGCUOC>();
-                foreach (var i in dataRow)
-                {
+                foreach (var i in dataRow) {
                     index++;
                     var tmp = i.Trim('\r').Split('\t');
                     if (index == 1) continue;
-                    if (tmp.Length > 13)
-                    {
+                    if (tmp.Length > 13) {
                         var _data = new Models.BGCUOC();
                         _data.TENGOI = string.IsNullOrEmpty(tmp[0]) ? null : tmp[0].Trim();
                         _data.PROFILE = string.IsNullOrEmpty(tmp[1]) ? null : tmp[1].Trim();
@@ -371,7 +327,7 @@ namespace Billing.Controllers
                         _data.EXTRA_TYPE = string.IsNullOrEmpty(tmp[11]) ? 0 : int.Parse(tmp[11].Trim());
                         _data.FLAG = string.IsNullOrEmpty(tmp[12]) ? 0 : int.Parse(tmp[12].Trim());
                         _data.GHICHU = string.IsNullOrEmpty(tmp[13]) ? null : tmp[13].Trim();
-                        _data.CREATEDBY = Authentication.Auth.AuthUser.username;
+                        _data.CREATEDBY = Authentication.Core.Auth.AuthUser.username;
                         _data.CREATEDAT = DateTime.Now;
                         //PROFILEIP
                         //var PROFILEIP = ProfileIPList.TITLE.Trim(',').Split(',');
@@ -387,18 +343,14 @@ namespace Billing.Controllers
                     }
                 }
                 //
-                SQLServer.Connection.Insert(dataList);
-                return Json(new { success = $"{msg} - Count: {dataList.Count}" }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+                _Con.Connection.Insert(dataList);
+                return Json(new { success = $"{msg} - Count: {dataList.Count}" });
+            } catch (Exception ex) { return Json(new { danger = ex.Message + " - Index: " + index }); } finally { _Con.Close(); }
         }
-        public string getProfileIP(string ProfileIPList, string PROFILE)
-        {
+        public string getProfileIP(string ProfileIPList, string PROFILE) {
             var _array = ProfileIPList.Trim(',').Split(',');
             var PROFILEIP = ",";
-            if (!string.IsNullOrEmpty(PROFILE))
-            {
+            if (!string.IsNullOrEmpty(PROFILE)) {
                 var PROFILEList = PROFILE.Split('_');
                 if (PROFILEList.Length > 1)
                     foreach (var i in _array)
@@ -409,8 +361,7 @@ namespace Billing.Controllers
             //_data.PROFILEIP = string.IsNullOrEmpty(tmp[0]) ? null : tmp[0].Trim();
             return PROFILEIP;
         }
-        public class objBST : Common.ObjBSTable
-        {
+        public class objBST : Common.ObjBSTable {
             public string maDvi { get; set; }
             public string timeBill { get; set; }
             public int export { get; set; }

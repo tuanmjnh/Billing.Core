@@ -1,12 +1,9 @@
-﻿@model PagedList.IPagedList<dynamic>
-@using PagedList.Mvc;
-
-@{
+﻿@{
     ViewBag.Title = "Danh bạ khách hàng";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <p class="pull-left">
-    <button onclick="window.location='@Url.Action("Create")'" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> @TM.Common.Language.addnew</button>
+    <button onclick="window.location='@Url.Action("Create")'" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> Thêm mới</button>
     <button id="GetDanhBaKhachHangNull" data-url="@Url.Action("DanhBaKhachHangNull")" class="btn btn-default">Danh bạ khách hàng Null</button>
 </p>
 <div class="pull-right mb10 form-inline">
@@ -16,7 +13,7 @@
         @if (ViewBag.flag == 0)
         {
             <a href="javascript:;" class="btn btn-info btn-flag btn-chk" data-toggle="tooltip" title="Khôi phục tất cả" style="display:none"><i class="glyphicon glyphicon-refresh"></i></a>
-            if (Authentication.Auth.isAuth && Authentication.Auth.inRoles(new string[] { Authentication.Roles.admin, Authentication.Roles.superadmin }))
+            if (Authentication.Core.Auth.isAuth && Authentication.Core.Auth.inRoles(new string[] { Authentication.Core.Roles.admin, Authentication.Core.Roles.superadmin }))
             {
                 <a href="javascript:;" class="btn btn-danger btn-trash btn-chk" data-toggle="tooltip" title="Xóa vĩnh viễn" style="display:none"><i class="glyphicon glyphicon-remove"></i></a>
             }
@@ -59,7 +56,7 @@
 <div class="clearfix"></div>
 @if (Model == null || Model.Count < 1)
 {
-    <div class="alert alert-warning" role="alert">@TM.Common.Language.emptydb</div>
+    <div class="alert alert-warning" role="alert">Không có dữ liệu</div>
 }
 else
 {
@@ -68,72 +65,12 @@ else
             <thead>
                 <tr>
                     @*<th class="tbl-index">STT</th>*@
-                    <th>
-                        @Html.ActionLink("Profile", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "profile_asc" ? "profile_desc" : "profile_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
-                    <th>
-                        @Html.ActionLink("Tên gói", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "name_asc" ? "name_desc" : "name_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
-                    <th>
-                        @Html.ActionLink("Tốc độ", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "speed_asc" ? "speed_desc" : "speed_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
-                    <th>
-                        @Html.ActionLink("Giá", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "price_asc" ? "price_desc" : "price_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
-                    <th>
-                        @Html.ActionLink("Kiểu", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "type_asc" ? "type_desc" : "type_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
-                    <th>
-                        @Html.ActionLink("Gói cước ID", "Index",
-                                            new
-                                            {
-                                                order = TM.Url.getQueryString("order") != null && TM.Url.getQueryString("order") == "goicuocId_asc" ? "goicuocId_desc" : "goicuocId_asc",
-                                                currentFilter = ViewBag.currentFilter,
-                                                flag = ViewBag.flag,
-                                                datetime = ViewBag.datetime,
-                                                datetimeType = ViewBag.datetimeType,
-                                            })
-                    </th>
+                    <th>Profile</th>
+                    <th>Tên gói</th>
+                    <th>Tốc độ</th>
+                    <th>Giá</th>
+                    <th>Kiểu</th>
+                    <th>Gói cước ID</th>
                     <th class="tbl-checkbox">
                         <label><input type="checkbox" name="checkboxs" value="all" class="chkall" /></label>
                     </th>
@@ -147,7 +84,7 @@ else
                     <tr id="@item.ID">
                         @*<td class="center">@(index + (Model.PageNumber - 1) * Model.PageSize)</td>*@
                         <td>
-                            <a href="@Url.Action("Edit/"+item.ID,"BangGiaCuoc",new { area=""})">@item.PROFILE</a>
+                            <a href="Edit/">@item.PROFILE</a>
                         </td>
                         <td>@item.TENGOI</td>
                         <td>@item.TOCDO</td>
@@ -161,19 +98,6 @@ else
                 }
             </tbody>
         </table>
-    </div>
-    <div class="pagination-list">
-        Trang @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) của @Model.PageCount trong tổng số (@ViewBag.TotalRecords bản ghi)
-        @Html.PagedListPager(Model, page => Url.Action("Index",
-                                                  new
-                                                  {
-                                                      page,
-                                                      order = ViewBag.order,
-                                                      currentFilter = ViewBag.currentFilter,
-                                                      flag = ViewBag.flag,
-                                                      datetime = ViewBag.datetime,
-                                                      datetimeType = ViewBag.datetimeType
-                                                  }))
     </div>
 }
 <div class="clearfix"></div>

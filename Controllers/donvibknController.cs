@@ -2,28 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using System.Web.Mvc;
-using TM.Helper;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Billing.Controllers
-{
-    [Filters.Auth(Role = Authentication.Roles.superadmin + "," + Authentication.Roles.admin + "," + Authentication.Roles.managerBill)]
-    public class DonViBKNController : Controller
-    {
-        TM.Connection.SQLServer SQLServer;
-        TM.Connection.Oracle Oracle;
-        public ActionResult Index()
-        {
+namespace Billing.Core.Controllers {
+    [MiddlewareFilters.Auth(Role = Authentication.Core.Roles.superadmin + "," + Authentication.Core.Roles.admin + "," + Authentication.Core.Roles.managerBill)]
+    public class DonViBKNController : BaseController {
+        public ActionResult Index() {
             return View();
         }
-        public ActionResult Insert()
-        {
+        public ActionResult Insert() {
             return PartialView("PartialCreate");
         }
-        public ActionResult Update()
-        {
+        public ActionResult Update() {
             return PartialView("PartialEdit");
         }
         //public ActionResult ImportTextData()
@@ -31,19 +23,16 @@ namespace Billing.Controllers
         //    return PartialView("PartialImportTextData");
         //}
         [HttpGet]
-        public JsonResult Select(objBST obj)//string sort, string order, string search, int offset = 0, int limit = 10, int flag = 1
+        public JsonResult Select(objBST obj) //string sort, string order, string search, int offset = 0, int limit = 10, int flag = 1
         {
             var index = 0;
             var qry = "";
             var cdt = "";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
-                //
+            try {
                 qry = $"SELECT * FROM DONVI_BKN WHERE FLAG={obj.flag}";
 
                 //Get data for Search
-                if (!String.IsNullOrEmpty(obj.search) && obj.search.isNumber())
+                if (!String.IsNullOrEmpty(obj.search) && TM.Core.Regex.RegEx.isNumber(obj.search))
                     cdt += $"(DONVI_ID={obj.search} OR MA_QUANHUYEN={obj.search}) AND ";
                 else if (!string.IsNullOrEmpty(obj.search))
                     cdt += $"(TEN_DV LIKE '%{obj.search}%' OR DIACHI_DV LIKE '%{obj.search}%') AND ";
@@ -52,25 +41,24 @@ namespace Billing.Controllers
                     qry += $" AND {cdt.Substring(0, cdt.Length - 5)}";
 
                 //export
-                if (obj.export == 1)
-                {
+                if (obj.export == 1) {
                     //var startDate = DateTime.ParseExact($"{obj.startDate}", "dd/MM/yyyy HH:mm", provider);
                     //var endDate = DateTime.ParseExact($"{obj.endDate}", "dd/MM/yyyy HH:mm", provider);
                     //qry += $" AND tb.FLAG=2 AND tb.UPDATEDAT>=CAST('{startDate.ToString("yyyy-MM-dd")}' as datetime) AND tb.UPDATEDAT<=CAST('{endDate.ToString("yyyy-MM-dd")}' as datetime) ORDER BY tb.MA_DVI,tb.UPDATEDAT";
-                    //var export = SQLServer.Connection.Query<Portal.Areas.ND49.Models.ND49Export>(qry);
+                    //var export = _Con.Connection.Query<Portal.Areas.ND49.Models.ND49Export>(qry);
                     //qry = "SELECT * FROM users";
-                    //var user = SQLServer.Connection.Query<Authentication.user>(qry);
+                    //var user = _Con.Connection.Query<Authentication.user>(qry);
                     //foreach (var i in export)
                     //{
                     //    var tmp = user.FirstOrDefault(d => d.username == i.NVQL);
                     //    i.TEN_NVQL = tmp != null ? tmp.full_name : null;
                     //}
-                    //var rsJson = Json(new { data = export, SHA = Guid.NewGuid() }, JsonRequestBehavior.AllowGet);
+                    //var rsJson = Json(new { data = export, SHA = Guid.NewGuid() });
                     //rsJson.MaxJsonLength = int.MaxValue;
                     //return rsJson;
                 }
                 //
-                var data = SQLServer.Connection.Query<Models.DONVI_BKN>(qry);
+                var data = _Con.Connection.Query<Models.DONVI_BKN>(qry);
 
                 ////Get data for Search
                 //if (!string.IsNullOrEmpty(obj.search))
@@ -83,12 +71,11 @@ namespace Billing.Controllers
                 //    d.DIACHI_TT.Contains(obj.search));
                 //
                 if (data.ToList().Count < 1)
-                    return Json(new { total = 0, rows = data }, JsonRequestBehavior.AllowGet);
+                    return Json(new { total = 0, rows = data });
                 //Get total item
                 var total = data.Count();
                 //Sort And Orders
-                if (!string.IsNullOrEmpty(obj.sort))
-                {
+                if (!string.IsNullOrEmpty(obj.sort)) {
                     if (obj.sort.ToUpper() == "TEN_DV" && obj.order.ToLower() == "asc")
                         data = data.OrderBy(m => m.TEN_DV);
                     else if (obj.sort.ToUpper() == "TEN_DV" && obj.order.ToLower() == "desc")
@@ -99,45 +86,36 @@ namespace Billing.Controllers
                         data = data.OrderByDescending(m => m.MA_QUANHUYEN);
                     else
                         data = data.OrderBy(m => m.MA_QUANHUYEN).ThenBy(m => m.TEN_DV);
-                }
-                else
+                } else
                     data = data.OrderBy(m => m.MA_QUANHUYEN).ThenBy(m => m.TEN_DV);
                 //Page Site
                 var rs = data.Skip(obj.offset).Take(obj.limit).ToList();
-                var ReturnJson = Json(new { total = total, rows = rs }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { total = total, rows = rs });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
-            //return Json(new { success = "Cập nhật thành công!" }, JsonRequestBehavior.AllowGet);
+            } catch (Exception) { return Json(new { danger = "Không tìm thấy dữ liệu, vui lòng thực hiện lại!" }); } finally { _Con.Close(); }
+            //return Json(new { success = "Cập nhật thành công!" });
         }
+
         [HttpPost, ValidateAntiForgeryToken]
-        public JsonResult InsertUpdate(Models.BGCUOC obj, long? id)
-        {
+        public JsonResult InsertUpdate(Models.BGCUOC obj, long? id) {
             //var provider = System.Globalization.CultureInfo.InvariantCulture;
             var index = 0;
             var qry = "";
             var msg = "Cập nhật thông tin thành công!";
             var profile_ip = "profile_ip";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
-                //
+            try {
                 qry = $"SELECT i.*,g.TITLE AS GROUPTITLE FROM ITEMS i,GROUPS g WHERE i.GROUPID=g.GROUPID AND i.APPKEY='{profile_ip}' AND g.APPKEY='{profile_ip}' AND i.FLAG=1 AND g.FLAG=1 ORDER BY i.TITLE";
-                var ProfileIPList = SQLServer.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
+                var ProfileIPList = _Con.Connection.QueryFirstOrDefault<Models.GROUPS>(qry);
                 //
-                if (id == null)
-                {
-                    obj.CREATEDBY = Authentication.Auth.AuthUser.username;
+                if (id == null) {
+                    obj.CREATEDBY = Authentication.Core.Auth.AuthUser.username;
                     obj.CREATEDAT = DateTime.Now;
-                    SQLServer.Connection.Insert(obj);
+                    _Con.Connection.Insert(obj);
                     msg = "Tạo mới thông tin thành công!";
-                }
-                else
-                {
+                } else {
                     qry = $"SELECT * FROM BGCUOC WHERE BGCUOCID={id}";
-                    var data = SQLServer.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
+                    var data = _Con.Connection.QueryFirstOrDefault<Models.BGCUOC>(qry);
                     data.TENGOI = obj.TENGOI;
                     data.PROFILE = obj.PROFILE;
                     data.TOCDO = obj.TOCDO;
@@ -151,41 +129,34 @@ namespace Billing.Controllers
                     data.NGAY_BD = obj.NGAY_BD;
                     data.NGAY_KT = obj.NGAY_KT;
                     data.EXTRA_TYPE = obj.EXTRA_TYPE;
-                    data.UPDATEDBY = Authentication.Auth.AuthUser.username;
+                    data.UPDATEDBY = Authentication.Core.Auth.AuthUser.username;
                     data.UPDATEDAT = DateTime.Now;
                     data.FLAG = obj.FLAG;
-                    SQLServer.Connection.Update(data);
+                    _Con.Connection.Update(data);
                 }
-                var ReturnJson = Json(new { success = msg }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { success = msg });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+            } catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }); } finally { _Con.Close(); }
         }
+
         [HttpGet]
-        public JsonResult UpdateDataHNI(Models.DONVI_BKN obj)
-        {
+        public JsonResult UpdateDataHNI(Models.DONVI_BKN obj) {
             //var provider = System.Globalization.CultureInfo.InvariantCulture;
             var index = 0;
             var qry = "";
-            try
-            {
-                SQLServer = new TM.Connection.SQLServer();
-                Oracle = new TM.Connection.Oracle("HNIVNPTBACKAN1");
-                //
+            var HNIVNPTBACKAN1 = new TM.Core.Connection.Oracle("HNIVNPTBACKAN1");
+            try {
                 qry = $"SELECT * FROM DONVI_BKN WHERE CAPDONVI_ID IN(29,30)";
-                var donvi_hni = Oracle.Connection.Query<Models.DONVI_BKN>(qry);
+                var donvi_hni = HNIVNPTBACKAN1.Connection.Query<Models.DONVI_BKN>(qry);
                 qry = $"SELECT * FROM DONVI_BKN";
-                var data = SQLServer.Connection.Query<Models.DONVI_BKN>(qry);
+                var data = _Con.Connection.Query<Models.DONVI_BKN>(qry);
                 //
                 var DataInsert = new List<Models.DONVI_BKN>();
                 var DataUpdate = new List<Models.DONVI_BKN>();
-                foreach (var i in donvi_hni)
-                {
+                foreach (var i in donvi_hni) {
                     var _tmp = data.FirstOrDefault(d => d.DONVI_ID == i.DONVI_ID);
-                    if (_tmp != null)
-                    {
+                    if (_tmp != null) {
                         _tmp.DONVI_CHA_ID = i.DONVI_CHA_ID;
                         _tmp.CAPDONVI_ID = i.CAPDONVI_ID;
                         _tmp.MA_DV = i.MA_DV;
@@ -206,9 +177,7 @@ namespace Billing.Controllers
                         _tmp.DONVI_ID_MAP = i.DONVI_ID_MAP;
                         _tmp.FLAG = 1;
                         DataUpdate.Add(_tmp);
-                    }
-                    else
-                    {
+                    } else {
                         var tmp = new Models.DONVI_BKN();
                         tmp.DONVI_ID = i.DONVI_ID;
                         tmp.DONVI_CHA_ID = i.DONVI_CHA_ID;
@@ -234,18 +203,15 @@ namespace Billing.Controllers
                     }
                 }
                 //
-                if (DataInsert.Count > 0) SQLServer.Connection.Insert(DataInsert);
-                if (DataUpdate.Count > 0) SQLServer.Connection.Update(DataUpdate);
+                if (DataInsert.Count > 0) _Con.Connection.Insert(DataInsert);
+                if (DataUpdate.Count > 0) _Con.Connection.Update(DataUpdate);
                 //
-                var ReturnJson = Json(new { success = $"DONVI_BKN - Cập nhật: {DataUpdate.Count} - Thêm mới: {DataInsert.Count}" }, JsonRequestBehavior.AllowGet);
-                ReturnJson.MaxJsonLength = int.MaxValue;
+                var ReturnJson = Json(new { success = $"DONVI_BKN - Cập nhật: {DataUpdate.Count} - Thêm mới: {DataInsert.Count}" });
+                //ReturnJson.MaxJsonLength = int.MaxValue;
                 return ReturnJson;
-            }
-            catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }, JsonRequestBehavior.AllowGet); }
-            finally { SQLServer.Close(); }
+            } catch (Exception ex) { return Json(new { danger = "Lỗi hệ thống vui lòng thực hiện lại!" }); } finally { HNIVNPTBACKAN1.Close(); }
         }
-        public class objBST : Common.ObjBSTable
-        {
+        public class objBST : Common.ObjBSTable {
             public string maDvi { get; set; }
             public string timeBill { get; set; }
             public int export { get; set; }

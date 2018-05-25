@@ -2,11 +2,6 @@
     ViewBag.Title = "Quản lý Bảng giá cước";
     ViewBag.ContentTitle = "Danh sách bảng giá cước";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var disabled = "";
-    if (Authentication.Auth.AuthUser.roles == Authentication.Roles.staff || Authentication.Auth.AuthUser.roles == Authentication.Roles.leader)
-    {
-        disabled = "disabled";
-    }
 }
 <div class="form-inline pull-right mb10 pl5">
     <div class="pull-right">
@@ -128,10 +123,10 @@
     </div>*@
 <div id="ExportTable"></div>
 @section scripts {
-    <script src="~/Plugin/bootstrap-table/bootstrap-table.js"></script>
-    <script src="~/Plugin/bootstrap-table/extensions/export/bootstrap-table-export.js"></script>
-    <script src="~/Plugin/bootstrap-table/extensions/export/tableExport.js"></script>
-    <script src="~/Scripts/PartialList.js"></script>
+    <script src="~/lib/bootstrap-table/bootstrap-table.js"></script>
+    <script src="~/lib/bootstrap-table/extensions/export/bootstrap-table-export.js"></script>
+    <script src="~/lib/bootstrap-table/extensions/export/tableExport.js"></script>
+    <script src="~/js/PartialList.js"></script>
     <script>
         var token = { '__RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() };
         function dateTimeFormatter(value, row, index) {

@@ -2,11 +2,6 @@
     ViewBag.Title = "File Manager";
     ViewBag.ContentTitle = "File Manager List";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var disabled = "";
-    if (Authentication.Auth.AuthUser.roles == Authentication.Roles.staff || Authentication.Auth.AuthUser.roles == Authentication.Roles.leader)
-    {
-        disabled = "disabled";
-    }
 }
 <div class="form-inline pull-right mb10 pl5">
     <div class="pull-right">
@@ -93,7 +88,7 @@
     </thead>
 </table>
 <div class="clearfix mb-1"></div>
-@if (Authentication.Auth.AuthUser.roles == Authentication.Roles.superadmin || Authentication.Auth.AuthUser.roles == Authentication.Roles.admin)
+@if (Authentication.Core.Auth.AuthUser.roles == Authentication.Core.Roles.superadmin || Authentication.Core.Auth.AuthUser.roles == Authentication.Core.Roles.admin)
 {
     <a class="btn btn-secondary btnAction" href="#" data-url="@Url.Action("ExtensionToLower")">Extension To Lower</a>
     <a class="btn btn-secondary btnAction" href="#" data-url="@Url.Action("LoadData")">Load Data</a>

@@ -85,7 +85,7 @@
                 {
                     <li class="nav-item dropdown account">
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <span id="lblAccountDisplay"> @(Authentication.Core.Auth.AuthUser.full_name != null && !String.IsNullOrWhiteSpace(Authentication.Core.Auth.AuthUser.full_name) ? Authentication.Core.Auth.AuthUser.full_name : Authentication.Core.Auth.AuthUser.username)</span>
+                            <span id="lblAccountDisplay">@Authentication.Core.Auth.AuthUser.fullname</span>
                             <span class="caret"></span>
                         </a>
                         <div class="dropdown-menu">
@@ -93,7 +93,7 @@
                             <a href="#" class="dropdown-item btnGetForm" data-url="Profile/ChangePassword" tm-lang="Users.changePassword"></a>
                             <a href="#" class="dropdown-item btnGetForm" data-url="Profile/UserSetting" tm-lang="Users.userSetting"></a>
                             @*<div role="separator" class="divider"></div>*@
-                            <a href="#" data-url="@Url.Action("logout", "Auth",new { area = "" }, null)" class="dropdown-item btnLogout" tm-lang="Auth.logout">Đăng xuất</a>
+                            <a href="#" data-type="GET" data-time-out="600" data-url="@Url.Action("logout", "Auth",new { area = "" }, null)" class="dropdown-item btnLogout" tm-lang="Auth.logout">Đăng xuất</a>
                         </div>
                     </li>
                 }
@@ -110,10 +110,13 @@
     <!-- <partial name="_CookieConsentPartial" /> -->
 
     <div class="container body-content">
+        @Html.Partial("Message")
+        <div id="TMAlert"></div>
         @RenderBody()
+        <div class="clearfix"></div>
         <hr />
         <footer>
-            <p>&copy; 2018 - Billing.Core</p>
+            <p>&copy; @DateTime.Now.Year - Billing.Core</p>
         </footer>
     </div>
     <script src="~/js/site.min.js"></script>

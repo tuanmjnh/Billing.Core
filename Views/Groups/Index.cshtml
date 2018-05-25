@@ -2,11 +2,6 @@
     ViewBag.Title = "Quản lý nhóm";
     ViewBag.ContentTitle = "Danh sách nhóm";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var disabled = "";
-    if (Authentication.Auth.AuthUser.roles == Authentication.Roles.staff || Authentication.Auth.AuthUser.roles == Authentication.Roles.leader)
-    {
-        disabled = "disabled";
-    }
 }
 <div class="form-inline pull-right mb10 pl5">
     <div class="pull-right">
@@ -110,8 +105,7 @@
         </div>
     </div>*@
 <div id="ExportTable"></div>
-@section ScriptList {
-    @Html.Partial("ScriptList")
+@section Scripts {
     <script src="~/Plugin/bootstrap-table/bootstrap-table.js"></script>
     <script src="~/Plugin/bootstrap-table/extensions/export/bootstrap-table-export.js"></script>
     <script src="~/Plugin/bootstrap-table/extensions/export/tableExport.js"></script>

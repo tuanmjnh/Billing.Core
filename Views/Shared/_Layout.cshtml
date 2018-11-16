@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="content-type" content="text/plain; charset=UTF-8" />
+    <title>@ViewData["Title"] - Billing.Core</title>
+    <link rel="shortcut icon" type="image/png" href="~/favicon.ico">
+    <link rel="stylesheet" href="~/css/site.min.css" />
+    <!-- <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment> -->
+    @Html.AntiForgeryToken()
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="@Url.Action("Index")">Billing 3.3</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item dropdown active">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Quản lý</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a href="@Url.Action("Index","FileManager", new { area = "" }, null)" class="dropdown-item">File Manager</a>
+                        <a href="@Url.Action("Index","BGCUOC", new { area = "" }, null)" class="dropdown-item">Bảng giá</a>
+                        <a href="@Url.Action("Index","DivhVuVT", new { area = "" }, null)" class="dropdown-item">Dịch vụ viễn thông</a>
+                        <a href="@Url.Action("Index","DonViBKN", new { area = "" }, null)" class="dropdown-item">Đơn vị BKN</a>
+                        <a href="@Url.Action("Index","DanhBaKhachHang", new { area = "" }, null)" class="dropdown-item">Danh bạ khách hàng</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tính Cước</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a href="@Url.Action("Index","UploadCommon", new { area = "" }, null)" class="dropdown-item">Upload Data</a>
+                        <a href="@Url.Action("Index","GeneralProcess", new { area = "" }, null)" class="dropdown-item">Xử lý chung</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Công cụ</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a href="@Url.Action("Index","MerginBill", new { area = "" }, null)" class="dropdown-item">Ghép hóa đơn</a>
+                        <a href="@Url.Action("Index","HDDTBill", new { area = "" }, null)" class="dropdown-item">Hóa đơn điện tử</a>
+                        <a href="@Url.Action("Index","ExportDBF", new { area = "" }, null)" class="dropdown-item">Kết xuất</a>
+                        <a href="@Url.Action("Index","Report", new { area = "" }, null)" class="dropdown-item">Báo cáo</a>
+                        <a href="@Url.Action("Index","AdditionalTools", new { area = "" }, null)" class="dropdown-item">Additional Tools</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Cài đặt</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a href="@Url.Action("Index","Groups", new { area = "" }, null)" class="dropdown-item">Nhóm</a>
+                        <a href="@Url.Action("Index","Items", new { area = "" }, null)" class="dropdown-item">Mục</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Hướng dẫn</a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a href="@Url.Action("Index","Guide", new { area = "" }, null)" class="dropdown-item">Kết nối</a>
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav navbar-right">
+                @*<li class="ntfc">
+                        <a href="javascript:;" class="btn-ntfc">
+                            <span class="ntfc-count">0</span> <span class="fa fa-envelope"></span>
+                        </a>
+                        <div class="ntfc-list" tabindex="-1">
+                            <div class="ntfc-list-content"></div>
+                            <div class="ntfc-list-footer">
+                                <span class="btn btn-warning pull-right ntfc-btn-refresh"><i class="fa fa-refresh"></i></span>
+                            </div>
+                        </div>
+                    </li>*@
+                @if (Authentication.Core.Auth.isAuth)
+                {
+                    <li class="nav-item dropdown account">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span id="lblAccountDisplay">@Authentication.Core.Auth.AuthUser.fullname</span>
+                            <span class="caret"></span>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item btnGetForm" data-url="Profile/Index" tm-lang="Users.profile"></a>
+                            <a href="#" class="dropdown-item btnGetForm" data-url="Profile/ChangePassword" tm-lang="Users.changePassword"></a>
+                            <a href="#" class="dropdown-item btnGetForm" data-url="Profile/UserSetting" tm-lang="Users.userSetting"></a>
+                            @*<div role="separator" class="divider"></div>*@
+                            <a href="#" data-type="GET" data-time-out="600" data-url="@Url.Action("logout", "Auth",new { area = "" }, null)" class="dropdown-item btnLogout" tm-lang="Auth.logout">Đăng xuất</a>
+                        </div>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item dropdown account">
+                        <a href="@Url.Action("Index","Auth",new { area = "" }, null)">Đăng nhập</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
+
+    <!-- <partial name="_CookieConsentPartial" /> -->
+
+    <div class="container body-content">
+        @Html.Partial("Message")
+        <div id="TMAlert"></div>
+        @RenderBody()
+        <div class="clearfix"></div>
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Billing.Core</p>
+        </footer>
+    </div>
+    <script src="~/js/site.min.js"></script>
+    <!-- <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                crossorigin="anonymous"
+                integrity="sha384-K+ctZQ+LL8q6tP7I94W+qzQsfRV2a+AfHIi9k8z8l9ggpc8X+Ytst4yBo/hH+8Fk">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
+                crossorigin="anonymous"
+                integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa">
+        </script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment> -->
+
+    @RenderSection("Scripts", required: false)
+    <script>
+         getTinyMCE();
+        //FileUpload
+        $('.FileUpload').on('change', function () {
+            var files = this.files;
+            var html = '';
+            for (var i = 0; i < files.length; i++)
+                html += '<span class="text-primary">' + (i + 1) + '. ' + files[i].name + '</span><br/>';
+            $(this).next('.custom-file-label').addClass("selected").html($(this).val());
+            $('.lblUpload').html(html);
+        });
+        //Action link
+        $('.btnLogout').on('click', function (e) {
+            e.preventDefault();
+            ActionLink({
+                type: 'GET',
+                url: $(this).attr('data-url'),
+                urlTimeOut: 600
+            });
+        });
+    </script>
+</body>
+</html>
